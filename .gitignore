@@ -3,3 +3,4 @@ astra_processed_dataset.csv
 cicids2017_cleaned.csv
 *.csv
 lgbm_model.pkl
+catboost_info
