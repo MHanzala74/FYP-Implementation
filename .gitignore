@@ -3,8 +3,21 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+mydata.csv
+
+*.csv
+
 # C extensions
 *.so
+
+logs
+.logs
+
+artifacts/
+*.npz
+*.pkl
+*.h5
+*.model
 
 # Distribution / packaging
 .Python
