@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ASTRA — Cyber Threat Detection</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;600;700;900&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg:        #060a0f;
+    --bg2:       #0b1018;
+    --bg3:       #101820;
+    --border:    #1a2a3a;
+    --accent:    #00e5ff;
+    --accent2:   #ff3c5c;
+    --accent3:   #39ff14;
+    --warn:      #ffaa00;
+    --text:      #c8d8e8;
+    --muted:     #4a6070;
+    --mono:      'Share Tech Mono', monospace;
+    --sans:      'Barlow', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── grid lines background ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ══ HEADER ══════════════════════════════════════════════════════════ */
+  header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(6,10,15,.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 58px;
+  }
+
+  .logo {
+    display: flex; align-items: center; gap: .75rem;
+    font-family: var(--mono);
+    font-size: 1.2rem;
+    letter-spacing: .2em;
+    color: var(--accent);
+  }
+  .logo-icon {
+    width: 32px; height: 32px;
+    border: 2px solid var(--accent);
+    border-radius: 6px;
+    display: grid; place-items: center;
+    animation: pulse-border 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse-border {
+    0%,100% { box-shadow: 0 0 0 0 rgba(0,229,255,.4); }
+    50%      { box-shadow: 0 0 0 6px rgba(0,229,255,0); }
+  }
+  .logo-icon svg { width: 18px; height: 18px; fill: var(--accent); }
+
+  .status-bar {
+    display: flex; align-items: center; gap: 1.5rem;
+    font-family: var(--mono); font-size: .72rem; color: var(--muted);
+  }
+  .status-dot {
+    display: flex; align-items: center; gap: .4rem;
+  }
+  .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent3);
+    animation: blink 1.6s ease-in-out infinite;
+  }
+  .dot.warn { background: var(--warn); }
+  .dot.off  { background: var(--muted); animation: none; }
+  @keyframes blink {
+    0%,100% { opacity: 1; } 50% { opacity: .3; }
+  }
+  #clock { color: var(--accent); }
+
+  /* ══ LAYOUT ══════════════════════════════════════════════════════════ */
+  .wrapper {
+    position: relative; z-index: 1;
+    max-width: 1400px; margin: 0 auto;
+    padding: 1.5rem 2rem 3rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: auto auto auto auto;
+    gap: 1rem;
+  }
+
+  /* ══ CARDS ═══════════════════════════════════════════════════════════ */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.2rem 1.4rem;
+    position: relative;
+    overflow: hidden;
+    transition: border-color .25s;
+  }
+  .card:hover { border-color: rgba(0,229,255,.3); }
+  .card::after {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0;
+    transition: opacity .3s;
+  }
+  .card:hover::after { opacity: 1; }
+
+  .card-title {
+    font-family: var(--mono);
+    font-size: .68rem;
+    letter-spacing: .15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: .9rem;
+    display: flex; align-items: center; gap: .5rem;
+  }
+  .card-title span { color: var(--accent); }
+
+  /* ══ STAT CARDS ══════════════════════════════════════════════════════ */
+  .stats-row {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1rem;
+  }
+  .stat-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    position: relative; overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+  }
+  .stat-card.s-blue::before   { background: var(--accent); }
+  .stat-card.s-red::before    { background: var(--accent2); }
+  .stat-card.s-green::before  { background: var(--accent3); }
+  .stat-card.s-orange::before { background: var(--warn); }
+  .stat-card.s-purple::before { background: #bf5fff; }
+
+  .stat-label {
+    font-family: var(--mono); font-size: .63rem;
+    letter-spacing: .12em; color: var(--muted);
+    text-transform: uppercase; margin-bottom: .4rem;
+  }
+  .stat-value {
+    font-family: var(--mono); font-size: 2rem;
+    font-weight: 700; line-height: 1;
+    transition: color .3s;
+  }
+  .stat-card.s-blue   .stat-value { color: var(--accent); }
+  .stat-card.s-red    .stat-value { color: var(--accent2); }
+  .stat-card.s-green  .stat-value { color: var(--accent3); }
+  .stat-card.s-orange .stat-value { color: var(--warn); }
+  .stat-card.s-purple .stat-value { color: #bf5fff; }
+  .stat-sub { font-size: .72rem; color: var(--muted); margin-top: .3rem; }
+
+  /* ══ PREDICT FORM ════════════════════════════════════════════════════ */
+  .predict-card {
+    grid-column: 1 / 3;
+  }
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .6rem;
+  }
+
+  /* ── Section tabs ── */
+  .sec-tabs {
+    display: flex; flex-wrap: wrap; gap: .4rem;
+    margin-bottom: .8rem;
+  }
+  .sec-tab {
+    font-family: var(--mono); font-size: .65rem;
+    letter-spacing: .08em; text-transform: uppercase;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: .35rem .75rem;
+    border-radius: 4px; cursor: pointer;
+    transition: all .18s;
+    display: flex; align-items: center; gap: .35rem;
+  }
+  .sec-tab:hover { border-color: var(--accent); color: var(--accent); }
+  .sec-tab.active {
+    background: rgba(0,229,255,.1);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .sec-count {
+    background: rgba(0,229,255,.15);
+    color: var(--accent);
+    border-radius: 10px;
+    padding: 0 .4rem;
+    font-size: .6rem;
+  }
+  .sec-tab.active .sec-count { background: var(--accent); color: #000; }
+
+  /* Section panels */
+  .sec-panel { display: none; }
+  .sec-panel.active { display: block; }
+  .field label {
+    display: block;
+    font-family: var(--mono); font-size: .62rem;
+    letter-spacing: .08em; color: var(--muted);
+    margin-bottom: .25rem;
+  }
+  .field input {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: .45rem .6rem;
+    color: var(--text);
+    font-family: var(--mono); font-size: .8rem;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .field input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(0,229,255,.12);
+  }
+
+  .btn-row { display: flex; gap: .7rem; margin-top: 1rem; }
+  .btn {
+    font-family: var(--mono); font-size: .78rem;
+    letter-spacing: .1em; text-transform: uppercase;
+    padding: .6rem 1.4rem;
+    border: none; border-radius: 4px; cursor: pointer;
+    transition: all .2s;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+  }
+  .btn-primary:hover {
+    background: #fff;
+    box-shadow: 0 0 16px rgba(0,229,255,.5);
+  }
+  .btn-secondary {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ══ RESULT CARD ═════════════════════════════════════════════════════ */
+  .result-card {
+    grid-column: 3 / 4;
+    display: flex; flex-direction: column;
+  }
+  .verdict-display {
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    min-height: 180px;
+    text-align: center;
+  }
+  .verdict-label {
+    font-family: var(--mono); font-size: .65rem;
+    letter-spacing: .2em; color: var(--muted);
+    margin-bottom: .5rem;
+  }
+  .verdict-value {
+    font-family: var(--mono); font-size: 2.2rem;
+    font-weight: 700; letter-spacing: .1em;
+    text-transform: uppercase;
+    transition: all .4s;
+  }
+  .verdict-value.benign      { color: var(--accent3); }
+  .verdict-value.dos,
+  .verdict-value.ddos        { color: var(--accent2); }
+  .verdict-value.bruteforce,
+  .verdict-value.infiltration{ color: var(--warn); }
+  .verdict-value.portscan    { color: #bf5fff; }
+  .verdict-value.idle        { color: var(--muted); }
+
+  .severity-badge {
+    margin-top: .6rem;
+    padding: .25rem .8rem;
+    border-radius: 20px;
+    font-family: var(--mono); font-size: .68rem;
+    letter-spacing: .1em; text-transform: uppercase;
+    font-weight: 700;
+  }
+  .sev-none     { background: rgba(57,255,20,.15);  color: var(--accent3); }
+  .sev-medium   { background: rgba(191,95,255,.15); color: #bf5fff; }
+  .sev-high     { background: rgba(255,170,0,.15);  color: var(--warn); }
+  .sev-critical { background: rgba(255,60,92,.15);  color: var(--accent2); }
+
+  .model-scores {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: .5rem; margin-top: .8rem;
+  }
+  .score-item {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: .5rem .7rem;
+    text-align: center;
+  }
+  .score-name { font-family: var(--mono); font-size: .6rem; color: var(--muted); }
+  .score-val  { font-family: var(--mono); font-size: 1.1rem; color: var(--accent); }
+  .score-lbl  { font-family: var(--mono); font-size: .65rem; color: var(--text); margin-top: .1rem; }
+
+  .action-box {
+    margin-top: .8rem;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    padding: .6rem .8rem;
+    font-size: .78rem; line-height: 1.5;
+  }
+  .action-box.threat { border-left-color: var(--accent2); }
+
+  /* ══ LIVE LOG ════════════════════════════════════════════════════════ */
+  .log-card { grid-column: 1 / 3; }
+  .log-body {
+    height: 200px; overflow-y: auto;
+    font-family: var(--mono); font-size: .73rem;
+    line-height: 1.8;
+  }
+  .log-body::-webkit-scrollbar { width: 4px; }
+  .log-body::-webkit-scrollbar-track { background: transparent; }
+  .log-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .log-line { display: flex; gap: .8rem; }
+  .log-time { color: var(--muted); flex-shrink: 0; }
+  .log-msg.benign      { color: var(--accent3); }
+  .log-msg.threat      { color: var(--accent2); }
+  .log-msg.info        { color: var(--accent); }
+  .log-msg.warn        { color: var(--warn); }
+
+  /* ══ THREAT BREAKDOWN ════════════════════════════════════════════════ */
+  .chart-card { grid-column: 3 / 4; }
+  .bar-chart { display: flex; flex-direction: column; gap: .55rem; }
+  .bar-row { display: grid; grid-template-columns: 90px 1fr 42px; align-items: center; gap: .6rem; }
+  .bar-name { font-family: var(--mono); font-size: .68rem; color: var(--muted); }
+  .bar-track { background: var(--bg3); border-radius: 2px; height: 8px; overflow: hidden; }
+  .bar-fill  { height: 100%; border-radius: 2px; transition: width .8s cubic-bezier(.4,0,.2,1); }
+  .bar-count { font-family: var(--mono); font-size: .68rem; color: var(--text); text-align: right; }
+
+  /* ══ CSV SECTION ═════════════════════════════════════════════════════ */
+  .csv-card { grid-column: 1 / -1; }
+  .drop-zone {
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all .25s;
+    font-family: var(--mono); font-size: .8rem; color: var(--muted);
+  }
+  .drop-zone:hover,
+  .drop-zone.drag-over {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(0,229,255,.04);
+  }
+  #csv-name { margin-top: .5rem; font-size: .75rem; color: var(--accent); }
+  #csv-file { display: none; }
+
+  /* ══ BLOCKCHAIN CARD ════════════════════════════════════════════ */
+  .bc-card { grid-column: 1 / -1; }
+
+  .bc-stat {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: .6rem .8rem;
+  }
+  .bc-stat-label {
+    font-family: var(--mono); font-size: .6rem;
+    letter-spacing: .1em; color: var(--muted);
+    text-transform: uppercase; margin-bottom: .2rem;
+  }
+  .bc-stat-val {
+    font-family: var(--mono); font-size: 1.2rem;
+    color: var(--accent); font-weight: 700;
+  }
+
+  .bc-table-wrap {
+    overflow-x: auto;
+    max-height: 320px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+  }
+  .bc-table-wrap::-webkit-scrollbar { width: 4px; height: 4px; }
+  .bc-table-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .bc-table {
+    width: 100%; border-collapse: collapse;
+    font-family: var(--mono); font-size: .72rem;
+  }
+  .bc-table th {
+    background: var(--bg3);
+    color: var(--muted);
+    font-size: .62rem; letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: .55rem .7rem;
+    text-align: left;
+    position: sticky; top: 0;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .bc-table td {
+    padding: .5rem .7rem;
+    border-bottom: 1px solid rgba(26,42,58,.5);
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .bc-table tr:hover td { background: rgba(0,229,255,.03); }
+  .bc-table tr:last-child td { border-bottom: none; }
+
+  .sev-pill {
+    display: inline-block;
+    padding: .15rem .5rem;
+    border-radius: 10px;
+    font-size: .62rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .06em;
+  }
+  .pill-none     { background:rgba(57,255,20,.12);  color:var(--accent3); }
+  .pill-medium   { background:rgba(191,95,255,.12); color:#bf5fff; }
+  .pill-high     { background:rgba(255,170,0,.12);  color:var(--warn); }
+  .pill-critical { background:rgba(255,60,92,.12);  color:var(--accent2); }
+
+  /* spinner */
+  .spinner {
+    display: inline-block; width: 14px; height: 14px;
+    border: 2px solid rgba(0,229,255,.2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    vertical-align: middle; margin-right: .4rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ══ RESPONSIVE ══════════════════════════════════════════════════════ */
+  @media (max-width: 900px) {
+    .wrapper { grid-template-columns: 1fr; }
+    .stats-row { grid-template-columns: repeat(3,1fr); grid-column: 1; }
+    .predict-card, .log-card, .csv-card { grid-column: 1; }
+    .result-card, .chart-card { grid-column: 1; }
+    .feature-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* scan line effect */
+  @keyframes scanline {
+    0%   { transform: translateY(-100%); }
+    100% { transform: translateY(100vh); }
+  }
+  .scanline {
+    pointer-events: none;
+    position: fixed; left: 0; right: 0; top: 0;
+    height: 2px;
+    background: linear-gradient(transparent, rgba(0,229,255,.08), transparent);
+    animation: scanline 6s linear infinite;
+    z-index: 999;
+  }
+</style>
+</head>
+<body>
+
+<div class="scanline"></div>
+
+<!-- ══ HEADER ══════════════════════════════════════════════════ -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2L4 6v6c0 5.5 3.4 10.7 8 12 4.6-1.3 8-6.5 8-12V6L12 2zm0 10h-4V8h4v4zm0 4h-4v-2h4v2zm2-4V8h2v4h-2zm0 4v-2h2v2h-2z"/></svg>
+    </div>
+    ASTRA
+  </div>
+  <div class="status-bar">
+    <div class="status-dot"><div class="dot"></div> LIVE</div>
+    <div class="status-dot"><div class="dot"></div> RF MODEL</div>
+    <div class="status-dot"><div class="dot"></div> XGB MODEL</div>
+    <div id="clock">--:--:--</div>
+  </div>
+</header>
+
+<!-- ══ MAIN ════════════════════════════════════════════════════ -->
+<div class="wrapper">
+
+  <!-- STAT CARDS -->
+  <div class="stats-row">
+    <div class="stat-card s-blue">
+      <div class="stat-label">Total Analyzed</div>
+      <div class="stat-value" id="s-total">0</div>
+      <div class="stat-sub">flows processed</div>
+    </div>
+    <div class="stat-card s-red">
+      <div class="stat-label">Threats Found</div>
+      <div class="stat-value" id="s-threats">0</div>
+      <div class="stat-sub">malicious flows</div>
+    </div>
+    <div class="stat-card s-green">
+      <div class="stat-label">Benign</div>
+      <div class="stat-value" id="s-benign">0</div>
+      <div class="stat-sub">clean traffic</div>
+    </div>
+    <div class="stat-card s-orange">
+      <div class="stat-label">Last Threat</div>
+      <div class="stat-value" id="s-last" style="font-size:1.1rem;line-height:1.4;margin-top:.3rem">—</div>
+      <div class="stat-sub" id="s-last-time">—</div>
+    </div>
+    <div class="stat-card s-purple">
+      <div class="stat-label">API Status</div>
+      <div class="stat-value" id="s-api" style="font-size:1rem;line-height:1.4;margin-top:.3rem">OFFLINE</div>
+      <div class="stat-sub" id="s-api-url">localhost:8000</div>
+    </div>
+  </div>
+
+  <!-- PREDICT FORM -->
+  <div class="card predict-card">
+    <div class="card-title">◈ <span>Analyze Flow</span> — <span style="color:var(--muted)">51 features across 6 sections</span></div>
+    <div id="feature-grid"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="runPredict()">▶ Analyze</button>
+      <button class="btn btn-secondary" onclick="fillDemo()">Load Demo</button>
+      <button class="btn btn-secondary" onclick="clearForm()">Clear</button>
+    </div>
+  </div>
+
+  <!-- RESULT CARD -->
+  <div class="card result-card">
+    <div class="card-title">◈ <span>Detection Result</span></div>
+    <div class="verdict-display">
+      <div class="verdict-label">FINAL VERDICT</div>
+      <div class="verdict-value idle" id="verdict">WAITING</div>
+      <div class="severity-badge sev-none" id="severity-badge" style="margin-top:.6rem">NO ANALYSIS</div>
+    </div>
+    <div class="model-scores">
+      <div class="score-item">
+        <div class="score-name">RANDOM FOREST</div>
+        <div class="score-val" id="rf-conf">—</div>
+        <div class="score-lbl" id="rf-lbl">—</div>
+      </div>
+      <div class="score-item">
+        <div class="score-name">XGBOOST</div>
+        <div class="score-val" id="xgb-conf">—</div>
+        <div class="score-lbl" id="xgb-lbl">—</div>
+      </div>
+    </div>
+    <div class="action-box" id="action-box">
+      Submit a flow to see the automated response recommendation.
+    </div>
+  </div>
+
+  <!-- LIVE LOG -->
+  <div class="card log-card">
+    <div class="card-title">◈ <span>Activity Log</span> — real-time</div>
+    <div class="log-body" id="log-body">
+      <div class="log-line"><span class="log-time">--:--:--</span><span class="log-msg info">ASTRA dashboard initialized. Waiting for API connection...</span></div>
+    </div>
+  </div>
+
+  <!-- BAR CHART -->
+  <div class="card chart-card">
+    <div class="card-title">◈ <span>Threat Breakdown</span></div>
+    <div class="bar-chart" id="bar-chart"></div>
+  </div>
+
+  <!-- CSV CARD -->
+  <div class="card csv-card">
+    <div class="card-title">◈ <span>Batch Analysis</span> — CSV upload</div>
+    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('csv-file').click()">
+      <div>📂 &nbsp;Drop CSV file here or click to browse</div>
+      <div style="font-size:.68rem;margin-top:.3rem;opacity:.6">Max 5000 rows — headers required (51 feature columns)</div>
+      <div id="csv-name"></div>
+    </div>
+    <input type="file" id="csv-file" accept=".csv" onchange="handleCSV(this)" />
+    <div style="margin-top:.8rem; display:flex; gap:.7rem; align-items:center; flex-wrap:wrap;">
+      <button class="btn btn-primary" id="csv-btn" onclick="uploadCSV()" disabled>▶ Run Batch Analysis</button>
+      <span id="csv-status" style="font-family:var(--mono);font-size:.72rem;color:var(--muted)"></span>
+    </div>
+  </div>
+
+  <!-- BLOCKCHAIN RECORDS -->
+  <div class="card bc-card">
+    <div class="card-title" style="justify-content:space-between;display:flex;align-items:center">
+      <span>⛓ <span style="color:var(--accent)">Blockchain Logs</span> — immutable threat records</span>
+      <div style="display:flex;gap:.5rem;align-items:center">
+        <div class="dot" id="bc-dot" style="background:var(--muted)"></div>
+        <span id="bc-status-text" style="font-family:var(--mono);font-size:.65rem;color:var(--muted)">CHECKING...</span>
+        <button class="btn btn-secondary" style="padding:.3rem .8rem;font-size:.65rem" onclick="loadBlockchainLogs()">↻ REFRESH</button>
+      </div>
+    </div>
+
+    <!-- Stats row -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin-bottom:.8rem">
+      <div class="bc-stat">
+        <div class="bc-stat-label">Total Records</div>
+        <div class="bc-stat-val" id="bc-total">—</div>
+      </div>
+      <div class="bc-stat">
+        <div class="bc-stat-label">Threats Stored</div>
+        <div class="bc-stat-val" id="bc-threats" style="color:var(--accent2)">—</div>
+      </div>
+      <div class="bc-stat">
+        <div class="bc-stat-label">Contract</div>
+        <div class="bc-stat-val" id="bc-contract" style="font-size:.62rem;color:var(--muted);margin-top:.3rem;word-break:break-all">—</div>
+      </div>
+      <div class="bc-stat">
+        <div class="bc-stat-label">Node</div>
+        <div class="bc-stat-val" style="font-size:.7rem;color:var(--muted);margin-top:.25rem" id="bc-node">—</div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="bc-table-wrap">
+      <table class="bc-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Time</th>
+            <th>Threat</th>
+            <th>Severity</th>
+            <th>RF</th>
+            <th>XGB</th>
+            <th>RF Conf</th>
+            <th>XGB Conf</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="bc-tbody">
+          <tr><td colspan="9" style="text-align:center;color:var(--muted);padding:1.5rem">Loading blockchain records...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /wrapper -->
+
+<script>
+// ══════════════════════════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════════════════════════
+const API = 'http://localhost:8000/api/v1';
+
+// ── All 51 features grouped in sections ──────────────────────
+const FEATURE_SECTIONS = [
+  {
+    id: 'sec-flow', label: 'Flow Stats',
+    features: [
+      {k:'Flow_Duration',                   l:'Flow Duration'},
+      {k:'Flow_Bytes/s',                    l:'Flow Bytes/s'},
+      {k:'Flow_Packets/s',                  l:'Flow Packets/s'},
+      {k:'Flow_IAT_Mean',                   l:'IAT Mean'},
+      {k:'Flow_IAT_Std',                    l:'IAT Std'},
+      {k:'Flow_IAT_Max',                    l:'IAT Max'},
+      {k:'Flow_IAT_Min',                    l:'IAT Min'},
+    ]
+  },
+  {
+    id: 'sec-fwd', label: 'Forward',
+    features: [
+      {k:'Total_Fwd_Packets',               l:'Total Fwd Packets'},
+      {k:'Total_Length_of_Fwd_Packets',     l:'Total Fwd Length'},
+      {k:'Fwd_Packet_Length_Max',           l:'Fwd Pkt Len Max'},
+      {k:'Fwd_Packet_Length_Min',           l:'Fwd Pkt Len Min'},
+      {k:'Fwd_Packet_Length_Mean',          l:'Fwd Pkt Len Mean'},
+      {k:'Fwd_IAT_Mean',                    l:'Fwd IAT Mean'},
+      {k:'Fwd_IAT_Std',                     l:'Fwd IAT Std'},
+      {k:'Fwd_IAT_Min',                     l:'Fwd IAT Min'},
+      {k:'Fwd_PSH_Flags',                   l:'Fwd PSH Flags'},
+      {k:'Fwd_Header_Length',               l:'Fwd Header Len'},
+      {k:'Fwd_Avg_Bytes/Bulk',              l:'Fwd Avg Bytes/Bulk'},
+      {k:'Fwd_Avg_Packets/Bulk',            l:'Fwd Avg Pkts/Bulk'},
+      {k:'Fwd_Avg_Bulk_Rate',               l:'Fwd Avg Bulk Rate'},
+    ]
+  },
+  {
+    id: 'sec-bwd', label: 'Backward',
+    features: [
+      {k:'Bwd_Packet_Length_Max',           l:'Bwd Pkt Len Max'},
+      {k:'Bwd_Packet_Length_Min',           l:'Bwd Pkt Len Min'},
+      {k:'Bwd_IAT_Total',                   l:'Bwd IAT Total'},
+      {k:'Bwd_IAT_Mean',                    l:'Bwd IAT Mean'},
+      {k:'Bwd_IAT_Std',                     l:'Bwd IAT Std'},
+      {k:'Bwd_IAT_Max',                     l:'Bwd IAT Max'},
+      {k:'Bwd_IAT_Min',                     l:'Bwd IAT Min'},
+      {k:'Bwd_Header_Length',               l:'Bwd Header Len'},
+      {k:'Bwd_Packets/s',                   l:'Bwd Packets/s'},
+      {k:'Bwd_Avg_Bytes/Bulk',              l:'Bwd Avg Bytes/Bulk'},
+      {k:'Bwd_Avg_Packets/Bulk',            l:'Bwd Avg Pkts/Bulk'},
+      {k:'Bwd_Avg_Bulk_Rate',               l:'Bwd Avg Bulk Rate'},
+    ]
+  },
+  {
+    id: 'sec-pkt', label: 'Packet',
+    features: [
+      {k:'Min_Packet_Length',               l:'Min Pkt Length'},
+      {k:'Max_Packet_Length',               l:'Max Pkt Length'},
+      {k:'Packet_Length_Mean',              l:'Pkt Length Mean'},
+      {k:'Packet_Length_Variance',          l:'Pkt Len Variance'},
+      {k:'Down/Up_Ratio',                   l:'Down/Up Ratio'},
+    ]
+  },
+  {
+    id: 'sec-flag', label: 'Flags',
+    features: [
+      {k:'FIN_Flag_Count',                  l:'FIN Flags'},
+      {k:'RST_Flag_Count',                  l:'RST Flags'},
+      {k:'PSH_Flag_Count',                  l:'PSH Flags'},
+      {k:'ACK_Flag_Count',                  l:'ACK Flags'},
+      {k:'URG_Flag_Count',                  l:'URG Flags'},
+    ]
+  },
+  {
+    id: 'sec-win', label: 'Window / Active',
+    features: [
+      {k:'Init_Win_bytes_forward',          l:'Init Win Fwd'},
+      {k:'Init_Win_bytes_backward',         l:'Init Win Bwd'},
+      {k:'act_data_pkt_fwd',               l:'Act Data Pkt Fwd'},
+      {k:'min_seg_size_forward',            l:'Min Seg Size Fwd'},
+      {k:'Active_Mean',                     l:'Active Mean'},
+      {k:'Active_Std',                      l:'Active Std'},
+      {k:'Active_Max',                      l:'Active Max'},
+      {k:'Active_Min',                      l:'Active Min'},
+      {k:'Idle_Std',                        l:'Idle Std'},
+    ]
+  },
+];
+
+// Flat list for payload building
+const ALL_FEATURES = FEATURE_SECTIONS.flatMap(s => s.features);
+
+const DEMO = {
+  'Flow_Duration':109,'Flow_Bytes/s':110091.7,'Flow_Packets/s':18348.62,
+  'Flow_IAT_Mean':109.0,'Flow_IAT_Std':0.0,'Flow_IAT_Max':109,'Flow_IAT_Min':109,
+  'Total_Fwd_Packets':1,'Total_Length_of_Fwd_Packets':6,
+  'Fwd_Packet_Length_Max':6,'Fwd_Packet_Length_Min':6,'Fwd_Packet_Length_Mean':6.0,
+  'Fwd_IAT_Mean':0.0,'Fwd_IAT_Std':0.0,'Fwd_IAT_Min':0,
+  'Fwd_PSH_Flags':0,'Fwd_Header_Length':20,
+  'Fwd_Avg_Bytes/Bulk':0,'Fwd_Avg_Packets/Bulk':0,'Fwd_Avg_Bulk_Rate':0,
+  'Bwd_Packet_Length_Max':6,'Bwd_Packet_Length_Min':6,
+  'Bwd_IAT_Total':0,'Bwd_IAT_Mean':0.0,'Bwd_IAT_Std':0.0,'Bwd_IAT_Max':0,'Bwd_IAT_Min':0,
+  'Bwd_Header_Length':20,'Bwd_Packets/s':9174.31,
+  'Bwd_Avg_Bytes/Bulk':0,'Bwd_Avg_Packets/Bulk':0,'Bwd_Avg_Bulk_Rate':0,
+  'Min_Packet_Length':6,'Max_Packet_Length':6,'Packet_Length_Mean':6.0,
+  'Packet_Length_Variance':0.0,'Down/Up_Ratio':1,
+  'FIN_Flag_Count':0,'RST_Flag_Count':0,'PSH_Flag_Count':0,
+  'ACK_Flag_Count':1,'URG_Flag_Count':0,
+  'Init_Win_bytes_forward':29,'Init_Win_bytes_backward':256,
+  'act_data_pkt_fwd':0,'min_seg_size_forward':20,
+  'Active_Mean':0.0,'Active_Std':0.0,'Active_Max':0,'Active_Min':0,'Idle_Std':0.0,
+};
+
+const SEVERITY_CLASS = {none:'sev-none',medium:'sev-medium',high:'sev-high',critical:'sev-critical'};
+const COUNTS = {benign:0, dos:0, ddos:0, bruteforce:0, portscan:0, infiltration:0};
+const BAR_COLORS = {
+  benign:'var(--accent3)', dos:'var(--accent2)', ddos:'var(--accent2)',
+  bruteforce:'var(--warn)', portscan:'#bf5fff', infiltration:'var(--warn)',
+};
+
+let statsTotal=0, statsThreats=0, statsBenign=0;
+let csvFile = null;
+
+// ══════════════════════════════════════════════════════════════
+//  CLOCK
+// ══════════════════════════════════════════════════════════════
+function tick() {
+  const n = new Date();
+  document.getElementById('clock').textContent =
+    n.toLocaleTimeString('en-GB',{hour12:false});
+}
+tick(); setInterval(tick, 1000);
+
+// ══════════════════════════════════════════════════════════════
+//  HEALTH CHECK
+// ══════════════════════════════════════════════════════════════
+async function checkHealth() {
+  try {
+    const r = await fetch(`${API}/health`, {signal: AbortSignal.timeout(2000)});
+    const d = await r.json();
+    if (d.models_loaded) {
+      document.getElementById('s-api').textContent = 'ONLINE';
+      document.getElementById('s-api').style.color = 'var(--accent3)';
+      addLog('API connected. Models loaded ✓', 'info');
+    } else {
+      document.getElementById('s-api').textContent = 'DEGRADED';
+      document.getElementById('s-api').style.color = 'var(--warn)';
+    }
+  } catch {
+    document.getElementById('s-api').textContent = 'OFFLINE';
+    document.getElementById('s-api').style.color = 'var(--accent2)';
+  }
+}
+checkHealth(); setInterval(checkHealth, 15000);
+
+// ══════════════════════════════════════════════════════════════
+//  BUILD FORM
+// ══════════════════════════════════════════════════════════════
+function getFieldId(k) { return 'f_' + k.replace(/[^a-z0-9]/gi,'_'); }
+
+// ── Tab state ──────────────────────────────────────────────────
+let activeSection = FEATURE_SECTIONS[0].id;
+
+function buildForm() {
+  const g = document.getElementById('feature-grid');
+
+  // Tab bar
+  let tabHTML = '<div class="sec-tabs">';
+  FEATURE_SECTIONS.forEach(s => {
+    tabHTML += `<button class="sec-tab ${s.id===activeSection?'active':''}" onclick="switchTab('${s.id}')">${s.label} <span class="sec-count">${s.features.length}</span></button>`;
+  });
+  tabHTML += '</div>';
+
+  // Section panels
+  let panelsHTML = '';
+  FEATURE_SECTIONS.forEach(s => {
+    panelsHTML += `<div class="sec-panel ${s.id===activeSection?'active':''}" id="${s.id}">`;
+    panelsHTML += '<div class="feature-grid">';
+    s.features.forEach(f => {
+      panelsHTML += `<div class="field"><label>${f.l}</label><input type="number" id="${getFieldId(f.k)}" placeholder="0" step="any" /></div>`;
+    });
+    panelsHTML += '</div></div>';
+  });
+
+  g.innerHTML = tabHTML + panelsHTML;
+}
+
+function switchTab(id) {
+  activeSection = id;
+  document.querySelectorAll('.sec-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.sec-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`[onclick="switchTab('${id}')"]`).classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+
+buildForm();
+
+function fillDemo() {
+  ALL_FEATURES.forEach(f => {
+    const el = document.getElementById(getFieldId(f.k));
+    if (el && DEMO[f.k] !== undefined) el.value = DEMO[f.k];
+  });
+  addLog('Demo flow loaded — all 51 features set (benign sample)', 'info');
+}
+
+function clearForm() {
+  ALL_FEATURES.forEach(f => {
+    const el = document.getElementById(getFieldId(f.k));
+    if (el) el.value = '';
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PREDICT
+// ══════════════════════════════════════════════════════════════
+async function runPredict() {
+  const payload = {};
+  ALL_FEATURES.forEach(f => {
+    const el = document.getElementById(getFieldId(f.k));
+    payload[f.k] = el && el.value !== '' ? parseFloat(el.value) : 0;
+  });
+
+  const btn = document.querySelector('.btn-primary');
+  btn.innerHTML = '<span class="spinner"></span>Analyzing...';
+  btn.disabled = true;
+
+  try {
+    const r = await fetch(`${API}/predict`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const d = await r.json();
+    showResult(d);
+    updateStats(d);
+    addLog(
+      `Flow analyzed → ${d.final_verdict.toUpperCase()} [RF:${d.rf_prediction} ${(d.rf_confidence*100).toFixed(0)}% | XGB:${d.xgb_prediction} ${(d.xgb_confidence*100).toFixed(0)}%]`,
+      d.is_threat ? 'threat' : 'benign'
+    );
+  } catch(e) {
+    addLog(`Error: ${e.message} — Is FastAPI running on port 8000?`, 'warn');
+    showOfflineResult();
+  }
+
+  btn.innerHTML = '▶ Analyze';
+  btn.disabled = false;
+}
+
+function showResult(d) {
+  const vEl = document.getElementById('verdict');
+  vEl.textContent = d.final_verdict.toUpperCase();
+  vEl.className = 'verdict-value ' + d.final_verdict;
+
+  const sb = document.getElementById('severity-badge');
+  sb.textContent = d.severity.toUpperCase();
+  sb.className = 'severity-badge ' + (SEVERITY_CLASS[d.severity] || 'sev-none');
+
+  document.getElementById('rf-conf').textContent  = (d.rf_confidence*100).toFixed(1)+'%';
+  document.getElementById('rf-lbl').textContent   = d.rf_prediction;
+  document.getElementById('xgb-conf').textContent = (d.xgb_confidence*100).toFixed(1)+'%';
+  document.getElementById('xgb-lbl').textContent  = d.xgb_prediction;
+
+  const ab = document.getElementById('action-box');
+  ab.textContent = d.recommended_action;
+  ab.className = 'action-box' + (d.is_threat ? ' threat' : '');
+}
+
+function showOfflineResult() {
+  document.getElementById('verdict').textContent = 'API ERROR';
+  document.getElementById('verdict').className = 'verdict-value idle';
+  document.getElementById('action-box').textContent = 'Could not reach API. Start FastAPI server: uvicorn startup:app --reload';
+}
+
+// ══════════════════════════════════════════════════════════════
+//  STATS & CHART
+// ══════════════════════════════════════════════════════════════
+function updateStats(d) {
+  statsTotal++;
+  if (d.is_threat) {
+    statsThreats++;
+    document.getElementById('s-last').textContent = d.final_verdict.toUpperCase();
+    document.getElementById('s-last-time').textContent = new Date().toLocaleTimeString('en-GB');
+  } else {
+    statsBenign++;
+  }
+  COUNTS[d.final_verdict] = (COUNTS[d.final_verdict]||0)+1;
+
+  document.getElementById('s-total').textContent   = statsTotal;
+  document.getElementById('s-threats').textContent = statsThreats;
+  document.getElementById('s-benign').textContent  = statsBenign;
+  renderBars();
+}
+
+function renderBars() {
+  const max = Math.max(...Object.values(COUNTS), 1);
+  const container = document.getElementById('bar-chart');
+  container.innerHTML = '';
+  Object.entries(COUNTS).forEach(([k,v]) => {
+    const pct = (v/max*100).toFixed(1);
+    container.innerHTML += `
+      <div class="bar-row">
+        <div class="bar-name">${k}</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:${pct}%;background:${BAR_COLORS[k]||'var(--accent)'}"></div>
+        </div>
+        <div class="bar-count">${v}</div>
+      </div>`;
+  });
+}
+renderBars();
+
+// ══════════════════════════════════════════════════════════════
+//  LOG
+// ══════════════════════════════════════════════════════════════
+function addLog(msg, type='info') {
+  const lb = document.getElementById('log-body');
+  const t = new Date().toLocaleTimeString('en-GB',{hour12:false});
+  const div = document.createElement('div');
+  div.className = 'log-line';
+  div.innerHTML = `<span class="log-time">${t}</span><span class="log-msg ${type}">${msg}</span>`;
+  lb.appendChild(div);
+  lb.scrollTop = lb.scrollHeight;
+  // keep last 60 entries
+  while (lb.children.length > 60) lb.removeChild(lb.firstChild);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  CSV UPLOAD
+// ══════════════════════════════════════════════════════════════
+const dropZone = document.getElementById('drop-zone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f && f.name.endsWith('.csv')) setCSVFile(f);
+});
+
+function handleCSV(input) {
+  if (input.files[0]) setCSVFile(input.files[0]);
+}
+function setCSVFile(f) {
+  csvFile = f;
+  document.getElementById('csv-name').textContent = '📄 ' + f.name + ' (' + (f.size/1024).toFixed(1) + ' KB)';
+  document.getElementById('csv-btn').disabled = false;
+  document.getElementById('csv-status').textContent = 'Ready to upload';
+  addLog(`CSV selected: ${f.name}`, 'info');
+}
+
+async function uploadCSV() {
+  if (!csvFile) return;
+  const btn = document.getElementById('csv-btn');
+  const st  = document.getElementById('csv-status');
+  btn.innerHTML = '<span class="spinner"></span>Uploading...';
+  btn.disabled = true;
+  st.textContent = 'Sending to API...';
+
+  const fd = new FormData();
+  fd.append('file', csvFile);
+
+  try {
+    const r = await fetch(`${API}/predict/csv`, { method:'POST', body: fd, signal: AbortSignal.timeout(30000) });
+    if (!r.ok) { const err = await r.json(); throw new Error(err.detail || `HTTP ${r.status}`); }
+    const d = await r.json();
+
+    st.textContent = `✓ Done — ${d.total_flows} flows, ${d.threats_found} threats found`;
+    st.style.color = 'var(--accent3)';
+    addLog(`Batch complete: ${d.total_flows} flows | threats: ${d.threats_found} | summary: ${JSON.stringify(d.summary)}`, d.threats_found>0?'threat':'benign');
+
+    // update global stats
+    statsTotal += d.total_flows;
+    statsThreats += d.threats_found;
+    statsBenign += (d.total_flows - d.threats_found);
+    document.getElementById('s-total').textContent   = statsTotal;
+    document.getElementById('s-threats').textContent = statsThreats;
+    document.getElementById('s-benign').textContent  = statsBenign;
+
+    Object.entries(d.summary).forEach(([k,v]) => {
+      COUNTS[k] = (COUNTS[k]||0) + v;
+    });
+    renderBars();
+
+  } catch(e) {
+    st.textContent = '✗ ' + e.message;
+    st.style.color = 'var(--accent2)';
+    addLog(`CSV upload error: ${e.message}`, 'warn');
+  }
+
+  btn.innerHTML = '▶ Run Batch Analysis';
+  btn.disabled = false;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  BLOCKCHAIN
+// ══════════════════════════════════════════════════════════════
+const SEV_PILL = {
+  none:     'pill-none',
+  medium:   'pill-medium',
+  high:     'pill-high',
+  critical: 'pill-critical',
+};
+
+function tsToTime(unix) {
+  if (!unix) return '—';
+  return new Date(unix * 1000).toLocaleString('en-GB', {
+    day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit', second:'2-digit'
+  });
+}
+
+async function loadBlockchainLogs() {
+  const dot  = document.getElementById('bc-dot');
+  const stxt = document.getElementById('bc-status-text');
+
+  try {
+    // Status
+    const sr = await fetch(`${API}/blockchain/status`, {signal: AbortSignal.timeout(4000)});
+    const sd = await sr.json();
+
+    if (sd.status === 'connected') {
+      dot.style.background  = 'var(--accent3)';
+      stxt.textContent      = 'CONNECTED';
+      stxt.style.color      = 'var(--accent3)';
+      document.getElementById('bc-total').textContent    = sd.total_records ?? '0';
+      document.getElementById('bc-threats').textContent  = sd.threat_count  ?? '0';
+      document.getElementById('bc-contract').textContent = sd.contract ? sd.contract.slice(0,10)+'...'+sd.contract.slice(-6) : '—';
+      document.getElementById('bc-node').textContent     = sd.node ?? '—';
+    } else {
+      dot.style.background = 'var(--accent2)';
+      stxt.textContent     = 'DISABLED';
+      stxt.style.color     = 'var(--accent2)';
+      document.getElementById('bc-tbody').innerHTML =
+        `<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:1.5rem">
+          Blockchain disabled — Ganache start karo aur CONTRACT_ADDRESS set karo.
+        </td></tr>`;
+      return;
+    }
+
+    // Logs
+    const lr = await fetch(`${API}/blockchain/logs`, {signal: AbortSignal.timeout(8000)});
+    const ld = await lr.json();
+    const logs = ld.logs || [];
+
+    const tbody = document.getElementById('bc-tbody');
+    if (logs.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:1.5rem">
+        Abhi koi threat record nahi hai. Koi threat detect ho to yahan aayega.
+      </td></tr>`;
+      return;
+    }
+
+    // Newest first
+    tbody.innerHTML = [...logs].reverse().map(r => {
+      const pillClass = SEV_PILL[r.severity] || 'pill-medium';
+      const threatColor = r.is_threat ? 'var(--accent2)' : 'var(--accent3)';
+      return `<tr>
+        <td style="color:var(--muted)">${r.record_id}</td>
+        <td style="color:var(--muted);font-size:.67rem">${tsToTime(r.timestamp)}</td>
+        <td style="color:${threatColor};font-weight:700;text-transform:uppercase">${r.threat_type}</td>
+        <td><span class="sev-pill ${pillClass}">${r.severity}</span></td>
+        <td style="color:var(--text)">${r.rf_prediction}</td>
+        <td style="color:var(--text)">${r.xgb_prediction}</td>
+        <td style="color:var(--accent)">${(r.rf_confidence*100).toFixed(1)}%</td>
+        <td style="color:var(--accent)">${(r.xgb_confidence*100).toFixed(1)}%</td>
+        <td style="color:var(--muted);font-size:.67rem;max-width:180px;overflow:hidden;text-overflow:ellipsis" title="${r.recommended_action}">${r.recommended_action}</td>
+      </tr>`;
+    }).join('');
+
+    addLog(`Blockchain: ${logs.length} records loaded`, 'info');
+
+  } catch(e) {
+    dot.style.background = 'var(--muted)';
+    stxt.textContent     = 'OFFLINE';
+    stxt.style.color     = 'var(--muted)';
+    document.getElementById('bc-tbody').innerHTML =
+      `<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:1.5rem">
+        API se connect nahi hua. FastAPI chalu hai?
+      </td></tr>`;
+  }
+}
+
+// Load on start + every 15 seconds auto refresh
+loadBlockchainLogs();
+setInterval(loadBlockchainLogs, 15000);
+</script>
+</body>
+</html>

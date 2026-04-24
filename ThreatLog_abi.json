@@ -1,0 +1,97 @@
+[
+  {
+    "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {"indexed": true,  "internalType": "uint256", "name": "recordId",  "type": "uint256"},
+      {"indexed": false, "internalType": "uint256", "name": "timestamp", "type": "uint256"},
+      {"indexed": false, "internalType": "string",  "name": "threatType","type": "string"},
+      {"indexed": false, "internalType": "string",  "name": "severity",  "type": "string"},
+      {"indexed": false, "internalType": "bool",    "name": "isThreat",  "type": "bool"}
+    ],
+    "name": "ThreatLogged",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {"internalType": "string",  "name": "_threatType",        "type": "string"},
+      {"internalType": "string",  "name": "_severity",          "type": "string"},
+      {"internalType": "string",  "name": "_rfPrediction",      "type": "string"},
+      {"internalType": "string",  "name": "_xgbPrediction",     "type": "string"},
+      {"internalType": "uint256", "name": "_rfConfidence",      "type": "uint256"},
+      {"internalType": "uint256", "name": "_xgbConfidence",     "type": "uint256"},
+      {"internalType": "string",  "name": "_recommendedAction", "type": "string"},
+      {"internalType": "bool",    "name": "_isThreat",          "type": "bool"}
+    ],
+    "name": "logThreat",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "uint256", "name": "_id", "type": "uint256"}],
+    "name": "getRecord",
+    "outputs": [
+      {
+        "components": [
+          {"internalType": "uint256", "name": "timestamp",          "type": "uint256"},
+          {"internalType": "string",  "name": "threatType",         "type": "string"},
+          {"internalType": "string",  "name": "severity",           "type": "string"},
+          {"internalType": "string",  "name": "rfPrediction",       "type": "string"},
+          {"internalType": "string",  "name": "xgbPrediction",      "type": "string"},
+          {"internalType": "uint256", "name": "rfConfidence",       "type": "uint256"},
+          {"internalType": "uint256", "name": "xgbConfidence",      "type": "uint256"},
+          {"internalType": "string",  "name": "recommendedAction",  "type": "string"},
+          {"internalType": "bool",    "name": "isThreat",           "type": "bool"}
+        ],
+        "internalType": "struct ThreatLog.ThreatRecord",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getTotalRecords",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getThreatCount",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "name": "records",
+    "outputs": [
+      {"internalType": "uint256", "name": "timestamp",         "type": "uint256"},
+      {"internalType": "string",  "name": "threatType",        "type": "string"},
+      {"internalType": "string",  "name": "severity",          "type": "string"},
+      {"internalType": "string",  "name": "rfPrediction",      "type": "string"},
+      {"internalType": "string",  "name": "xgbPrediction",     "type": "string"},
+      {"internalType": "uint256", "name": "rfConfidence",      "type": "uint256"},
+      {"internalType": "uint256", "name": "xgbConfidence",     "type": "uint256"},
+      {"internalType": "string",  "name": "recommendedAction", "type": "string"},
+      {"internalType": "bool",    "name": "isThreat",          "type": "bool"}
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]
