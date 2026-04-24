@@ -17,9 +17,7 @@ logs
 
 
 *.npz
-*.pkl
-*.h5
-*.model
+
 
 # Distribution / packaging
 .Python
