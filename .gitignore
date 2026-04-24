@@ -15,7 +15,7 @@ mydata.csv
 logs
 .logs
 
-artifacts/
+
 *.npz
 *.pkl
 *.h5
