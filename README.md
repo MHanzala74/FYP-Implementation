@@ -4,7 +4,7 @@ A Machine Learning-based Network Intrusion Detection System that classifies netw
 
 ## Overview
 
-This project implements a Machine Learning-based Network Intrusion Detection System to classify network traffic as either normal or malicious. The system leverages advanced ML algorithms to detect cyber threats in real-time and maintains an immutable audit trail of detected threats using blockchain technology.
+This project implements ASTRA — an AI-based Cyber Threat Detection and Response System. It classifies network traffic as normal or malicious using ensemble machine learning models (XGBoost and Random Forest) trained on the CIC-IDS2017 dataset, achieving over 99% accuracy. Detected threats are securely and immutably logged on the Ethereum Sepolia testnet via a custom Solidity smart contract (ThreatLog.sol). The system is built with a FastAPI backend, Web3.py for blockchain interaction, and Uvicorn as the ASGI server.
 
 ## Key Features
 
