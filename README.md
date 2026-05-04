@@ -1,4 +1,4 @@
-# Network Intrusion Detection System (NIDS)
+# ASTRA: AI-Based Cyber Threat Detection and Response System with Blockchain Support 
 
 A Machine Learning-based Network Intrusion Detection System that classifies network traffic as normal or malicious, with blockchain integration for secure threat logging.
 
